@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melting Curve Grapher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1D253F; --gold:#D9AD5A; --cream:#F3EFE7; --ink:#1D253F;
+    --muted:#6B6F7E; --line:#E4DED2; --teal:#2E8B7A; --orange:#E2A24E; --gray:#6B6F7E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--cream);font-family:'Nunito',sans-serif;color:var(--ink)}
+  #wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  #stage{width:1280px;height:720px;position:relative;background:var(--cream);transform-origin:center center;flex:none}
+
+  header{height:84px;background:var(--navy);padding:16px 28px 0;position:relative}
+  header h1{color:#fff;font-size:26px;font-weight:800;letter-spacing:.2px}
+  header .rule{width:110px;height:4px;background:var(--gold);border-radius:2px;margin:6px 0 6px}
+  header p{color:#D8DCE8;font-size:14px}
+  #dirBtn{position:absolute;right:28px;top:24px;background:var(--gold);color:var(--navy);border:0;border-radius:8px;
+    font:800 17px 'Nunito',sans-serif;padding:8px 20px;cursor:pointer}
+
+  main{display:grid;grid-template-columns:330px 1fr;gap:18px;padding:16px 22px 0;height:620px}
+  .card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(29,37,63,.08);padding:14px 16px}
+  .ch{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .badge{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;background:#DDF0EC}
+  .badge svg{width:17px;height:17px}
+  .ch h2{font-size:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+
+  #left{display:flex;flex-direction:column;gap:14px}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:0 4px 6px;text-align:center}
+  td{padding:3px 4px;text-align:center;font-weight:800;font-size:15px}
+  td input{width:100%;font:700 16px 'Nunito',sans-serif;color:var(--ink);border:2px solid var(--line);border-radius:8px;padding:5px 8px;text-align:center;background:#fff}
+  td input:focus{outline:none;border-color:var(--teal)}
+  td input.bad{border-color:#B8322A;background:#FBEDEB}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.35}
+
+  .btns{display:flex;flex-direction:column;gap:9px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--orange);color:var(--navy);border:0;border-radius:10px;
+    font:800 17px 'Nunito',sans-serif;padding:10px 14px;cursor:pointer}
+  .btn svg{width:20px;height:20px;flex:none}
+  .btn.on{outline:4px solid var(--navy);outline-offset:-4px}
+  .btn.sec{background:#fff;border:2px solid var(--line);font-size:15px;padding:7px 12px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+
+  #graphCard{display:flex;flex-direction:column;position:relative}
+  #readout{position:absolute;right:18px;top:14px;background:var(--cream);border-radius:10px;padding:6px 14px;font-size:15px;font-weight:800;min-width:290px;text-align:center}
+  #readout span{color:var(--teal)}
+  #mode{position:absolute;left:18px;top:16px;font-size:14px;font-weight:800;color:var(--muted)}
+  #g{width:100%;flex:1;touch-action:none;user-select:none}
+
+  #dirOverlay{position:absolute;inset:0;background:rgba(14,19,36,.6);display:none;align-items:center;justify-content:center;z-index:10}
+  #dirOverlay.show{display:flex}
+  .dirBox{background:#fff;border-radius:16px;width:760px;padding:0 0 22px;overflow:hidden;position:relative}
+  .dirBox h3{background:var(--gold);color:var(--navy);font-size:26px;font-weight:800;text-align:center;padding:12px}
+  .dirBox ol{padding:18px 40px 0 64px;font-size:17px;line-height:1.55}
+  .dirBox li{margin-bottom:6px}
+  #dirClose{position:absolute;right:12px;top:10px;width:34px;height:34px;border-radius:50%;border:0;background:var(--navy);color:#fff;font-size:18px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+
+<header>
+  <h1>Melting Curve Grapher</h1>
+  <div class="rule"></div>
+  <p id="sub">Graph your diamond anvil cell results and draw the melting curve of iron.</p>
+  <button id="dirBtn">Directions</button>
+</header>
+
+<main>
+  <div id="left">
+    <div class="card">
+      <div class="ch">
+        <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#2E8B7A" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16"/></svg></div>
+        <h2>Your Data</h2>
+      </div>
+      <table>
+        <thead><tr><th>Trial</th><th>Pressure (GPa)</th><th>Melting Temp. (°C)</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="hint">Enter the values from your journal table. Each point appears on the graph. Your data and drawing are saved on this device.</div>
+    </div>
+
+    <div class="card btns">
+      <button class="btn" id="bDraw">Draw Curve
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1D253F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20c4-1 6-6 9-10s5-6 9-6"/></svg></button>
+      <button class="btn" id="bCont">Continue the Pattern
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1D253F" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="3 3"><path d="M3 20c4-1 6-6 9-10s5-6 9-6"/></svg></button>
+      <button class="btn" id="bCore">Add Core Conditions Data
+        <svg viewBox="0 0 24 24" fill="#1D253F"><rect x="3" y="14" width="5" height="5"/><rect x="10" y="9" width="5" height="5"/><rect x="17" y="5" width="5" height="5"/></svg></button>
+      <div class="row2">
+        <button class="btn sec" id="bClear">Clear Drawing</button>
+        <button class="btn sec" id="bReset">Reset All</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="graphCard">
+    <div id="mode"></div>
+    <div id="readout">Pressure: <span id="rp">--</span> GPa &nbsp;·&nbsp; Temperature: <span id="rt">--</span> °C</div>
+    <svg id="g" viewBox="0 0 880 600"></svg>
+  </div>
+</main>
+
+<div id="dirOverlay">
+  <div class="dirBox">
+    <button id="dirClose" aria-label="Close">&times;</button>
+    <h3>Directions</h3>
+    <ol id="dir1">
+      <li><b>Enter your data.</b> Type each pressure and melting temperature from your journal table. Each point appears on the graph.</li>
+      <li><b>Draw your curve.</b> Click <b>Draw Curve</b>, then drag across the graph to draw a smooth curve through your points.</li>
+      <li><b>Read the graph.</b> Move the cursor over the graph to read the pressure and temperature at any point.</li>
+      <li><b>Redraw if needed.</b> Click <b>Clear Drawing</b> to erase your curve and try again.</li>
+    </ol>
+    <ol id="dir2">
+      <li><b>Check your data.</b> Your points and curve from Explore 3 load automatically. If they are missing, enter your journal data and click <b>Draw Curve</b> to redraw your curve.</li>
+      <li><b>Continue the pattern.</b> Click <b>Continue the Pattern</b>, then drag from the end of your curve to 364 GPa, following the pattern in your data.</li>
+      <li><b>Add the core data.</b> Click <b>Add Core Conditions Data</b> to plot the pressure and estimated temperature inside Earth's core.</li>
+      <li><b>Read the graph.</b> Move the cursor over the graph to read the pressure and temperature at any point.</li>
+      <li><b>Redraw if needed.</b> Click <b>Clear Drawing</b> to erase your continued pattern and try again.</li>
+    </ol>
+  </div>
+</div>
+
+</div></div>
+
+<script>
+(function(){
+  const stage=document.getElementById('stage');
+  function fit(){ const s=Math.min(window.innerWidth/1280, window.innerHeight/720); stage.style.transform='scale('+s+')'; }
+  window.addEventListener('resize',fit); fit();
+  const $=id=>document.getElementById(id);
+  $('dirBtn').onclick=()=>$('dirOverlay').classList.add('show');
+  $('dirClose').onclick=()=>$('dirOverlay').classList.remove('show');
+  $('dirOverlay').onclick=e=>{ if(e.target.id==='dirOverlay') $('dirOverlay').classList.remove('show'); };
+
+  // ---------- graph geometry ----------
+  const NS='http://www.w3.org/2000/svg', svg=$('g');
+  const L=92,R=860,T=58,B=530, PMAX=400, TMIN=2500, TMAX=6000;
+  const X=p=>L+(R-L)*p/PMAX, Y=t=>B-(B-T)*(t-TMIN)/(TMAX-TMIN);
+  const P=x=>(x-L)/(R-L)*PMAX, Tm=y=>TMIN+(B-y)/(B-T)*(TMAX-TMIN);
+  const el=(n,a,parent)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);(parent||svg).appendChild(e);return e;};
+
+  const grid=el('g',{});
+  for(let p=0;p<=PMAX;p+=10){const maj=p%50===0;
+    el('line',{x1:X(p),y1:T,x2:X(p),y2:B,stroke:maj?'#9AA2AE':'#E3E6EA','stroke-width':maj?1.6:1},grid);
+    if(maj){const t=el('text',{x:X(p),y:B+24,'text-anchor':'middle','font-size':15,'font-weight':700,fill:'#1D253F'},grid);t.textContent=p;}}
+  for(let t=TMIN;t<=TMAX;t+=100){const maj=t%500===0;
+    el('line',{x1:L,y1:Y(t),x2:R,y2:Y(t),stroke:maj?'#9AA2AE':'#E3E6EA','stroke-width':maj?1.6:1},grid);
+    if(maj){const s=el('text',{x:L-10,y:Y(t)+5,'text-anchor':'end','font-size':15,'font-weight':700,fill:'#1D253F'},grid);s.textContent=t.toLocaleString('en-US');}}
+  el('line',{x1:L,y1:T,x2:L,y2:B,stroke:'#1D253F','stroke-width':2.5},grid);
+  el('line',{x1:L,y1:B,x2:R,y2:B,stroke:'#1D253F','stroke-width':2.5},grid);
+  let a=el('text',{x:(L+R)/2,y:B+56,'text-anchor':'middle','font-size':18,'font-weight':800,fill:'#1D253F'},grid);a.textContent='Pressure (GPa)';
+  a=el('text',{transform:`translate(26,${(T+B)/2}) rotate(-90)`,'text-anchor':'middle','font-size':18,'font-weight':800,fill:'#1D253F'},grid);a.textContent='Temperature (°C)';
+
+  const coreG=el('g',{}), drawG=el('g',{}), ptG=el('g',{}), cross=el('g',{opacity:0,'pointer-events':'none'});
+  const ch1=el('line',{stroke:'#2E8B7A','stroke-width':1.2,'stroke-dasharray':'4 4'},cross);
+  const ch2=el('line',{stroke:'#2E8B7A','stroke-width':1.2,'stroke-dasharray':'4 4'},cross);
+
+  // legend
+  const leg=el('g',{transform:`translate(${L+14},${T+10})`});
+  const legBox=el('rect',{width:300,height:98,rx:6,fill:'#fff',stroke:'#1D253F','stroke-width':1.4},leg);
+  el('circle',{cx:18,cy:20,r:6,fill:'#1D253F'},leg);
+  let tx=el('text',{x:34,y:25,'font-size':14,'font-weight':700,fill:'#1D253F'},leg);tx.textContent='Your melting temperatures';
+  const leg2=el('g',{},leg);
+  el('line',{x1:8,y1:48,x2:28,y2:48,stroke:'#1D253F','stroke-width':3,'stroke-dasharray':'6 4'},leg2);
+  tx=el('text',{x:34,y:53,'font-size':14,'font-weight':700,fill:'#1D253F'},leg2);tx.textContent='Your continued pattern';
+  el('rect',{x:12,y:70,width:12,height:12,fill:'#6B6F7E'},leg2);
+  tx=el('text',{x:34,y:81,'font-size':14,'font-weight':700,fill:'#1D253F'},leg2);tx.textContent='Core Conditions data';
+
+  // ---------- part (Explore 3 = part 1, Explore 4 = part 2) ----------
+  let PART=1; try{ if(new URLSearchParams(location.search).get('part')==='2') PART=2; }catch(e){}
+  if(PART===1){
+    $('bCont').style.display='none'; $('bCore').style.display='none';
+    leg2.style.display='none'; legBox.setAttribute('height',40); legBox.setAttribute('width',230);
+    $('dir2').style.display='none';
+  } else {
+    $('dir1').style.display='none';
+    $('sub').textContent="Continue your melting curve and compare it with conditions inside Earth's core.";
+  }
+  const KEY='melting-curve-grapher-v1';
+  const strokes=[]; // {dash:bool, pts:[[x,y],...], path}
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify({data:inputs.map(([a,b])=>[a.value,b.value]), strokes:strokes.map(s=>({dash:s.dash,pts:s.pts}))})); }catch(e){} }
+
+  // ---------- data entry ----------
+  const rows=$('rows'), inputs=[];
+  for(let i=0;i<6;i++){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${i+1}</td><td><input inputmode="decimal" data-k="p"></td><td><input inputmode="decimal" data-k="t"></td>`;
+    rows.appendChild(tr);
+    const [ip,it]=tr.querySelectorAll('input'); inputs.push([ip,it]);
+    [ip,it].forEach(inp=>inp.addEventListener('input',()=>{plotPoints();save();}));
+  }
+  function num(v){v=String(v).replace(/,/g,'').trim(); if(v==='')return null; const n=Number(v); return isFinite(n)?n:NaN;}
+  function plotPoints(){
+    ptG.innerHTML='';
+    inputs.forEach(([ip,it])=>{
+      const p=num(ip.value), t=num(it.value);
+      ip.classList.toggle('bad', p!==null && (isNaN(p)||p<0||p>PMAX));
+      it.classList.toggle('bad', t!==null && (isNaN(t)||t<TMIN||t>TMAX));
+      if(p===null||t===null||isNaN(p)||isNaN(t)||p<0||p>PMAX||t<TMIN||t>TMAX) return;
+      el('circle',{cx:X(p),cy:Y(t),r:6.5,fill:'#1D253F'},ptG);
+    });
+  }
+
+  // ---------- core data ----------
+  const CORE=[[144,4200],[183,4430],[224,4680],[267,4940],[316,5260],[341,5340],[356,5380],[364,5400]];
+  let coreOn=false;
+  function drawCore(){
+    coreG.innerHTML='';
+    if(!coreOn) return;
+    el('polyline',{points:CORE.map(([p,t])=>X(p)+','+Y(t)).join(' '),fill:'none',stroke:'#6B6F7E','stroke-width':3},coreG);
+    CORE.forEach(([p,t])=>el('rect',{x:X(p)-6,y:Y(t)-6,width:12,height:12,fill:'#6B6F7E'},coreG));
+  }
+  $('bCore').onclick=()=>{coreOn=!coreOn; $('bCore').classList.toggle('on',coreOn); drawCore();};
+
+  // ---------- drawing ----------
+  let mode=null, cur=null;
+  function setMode(m){
+    mode=(mode===m)?null:m;
+    $('bDraw').classList.toggle('on',mode==='solid');
+    $('bCont').classList.toggle('on',mode==='dash');
+    $('mode').textContent= mode==='solid'?'Drawing: your curve' : mode==='dash'?'Drawing: continued pattern':'';
+    svg.style.cursor= mode?'crosshair':'default';
+  }
+  $('bDraw').onclick=()=>setMode('solid');
+  $('bCont').onclick=()=>setMode('dash');
+  $('bClear').onclick=()=>{
+    for(let i=strokes.length-1;i>=0;i--){ if(PART===1 || strokes[i].dash){ strokes[i].path.remove(); strokes.splice(i,1);} }
+    save();
+  };
+  $('bReset').onclick=()=>{drawG.innerHTML=''; strokes.length=0; inputs.forEach(r=>r.forEach(i=>{i.value='';i.classList.remove('bad');})); plotPoints(); coreOn=false; $('bCore').classList.remove('on'); drawCore(); if(mode)setMode(mode); save();};
+
+  function pt(e){const r=svg.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*880,(e.clientY-r.top)/r.height*600];}
+  const inPlot=([x,y])=>x>=L&&x<=R&&y>=T&&y<=B;
+  const clampPt=([x,y])=>[Math.min(R,Math.max(L,x)),Math.min(B,Math.max(T,y))];
+  svg.addEventListener('pointerdown',e=>{
+    if(!mode) return; const q=pt(e); if(!inPlot(q)) return;
+    svg.setPointerCapture(e.pointerId);
+    cur={dash:mode==='dash',pts:[q],path:el('path',{fill:'none',stroke:'#1D253F','stroke-width':3.5,'stroke-linecap':'round','stroke-linejoin':'round','stroke-dasharray':mode==='dash'?'10 7':'none'},drawG)};
+    redraw();
+  });
+  svg.addEventListener('pointermove',e=>{
+    const q=pt(e);
+    if(inPlot(q)){
+      cross.setAttribute('opacity',1);
+      ch1.setAttribute('x1',q[0]);ch1.setAttribute('x2',q[0]);ch1.setAttribute('y1',T);ch1.setAttribute('y2',B);
+      ch2.setAttribute('y1',q[1]);ch2.setAttribute('y2',q[1]);ch2.setAttribute('x1',L);ch2.setAttribute('x2',R);
+      $('rp').textContent=Math.round(P(q[0]));
+      $('rt').textContent=(Math.round(Tm(q[1])/10)*10).toLocaleString('en-US');
+    } else { cross.setAttribute('opacity',0); $('rp').textContent='--'; $('rt').textContent='--'; }
+    if(cur){const c=clampPt(q), last=cur.pts[cur.pts.length-1]; if(Math.hypot(c[0]-last[0],c[1]-last[1])>2){cur.pts.push(c); redraw();}}
+  });
+  const end=()=>{ if(cur){ if(cur.pts.length<2) cur.path.remove(); else { strokes.push(cur); save(); } } cur=null; };
+  svg.addEventListener('pointerup',end); svg.addEventListener('pointercancel',end);
+  svg.addEventListener('pointerleave',()=>{ if(!cur){cross.setAttribute('opacity',0);$('rp').textContent='--';$('rt').textContent='--';} });
+  function redraw(c){
+    c=c||cur; const p=c.pts; let d='M'+p[0][0].toFixed(1)+','+p[0][1].toFixed(1);
+    for(let i=1;i<p.length-1;i++){const mx=(p[i][0]+p[i+1][0])/2,my=(p[i][1]+p[i+1][1])/2; d+=` Q${p[i][0].toFixed(1)},${p[i][1].toFixed(1)} ${mx.toFixed(1)},${my.toFixed(1)}`;}
+    if(p.length>1){const q=p[p.length-1]; d+=` L${q[0].toFixed(1)},${q[1].toFixed(1)}`;}
+    c.path.setAttribute('d',d);
+  }
+  // ---------- restore saved work ----------
+  try{
+    const saved=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(saved){
+      (saved.data||[]).forEach((v,i)=>{ if(inputs[i]){ inputs[i][0].value=v[0]||''; inputs[i][1].value=v[1]||''; } });
+      plotPoints();
+      (saved.strokes||[]).forEach(s=>{ if(PART===1 && s.dash) return;
+        const c={dash:s.dash,pts:s.pts,path:el('path',{fill:'none',stroke:'#1D253F','stroke-width':3.5,'stroke-linecap':'round','stroke-linejoin':'round','stroke-dasharray':s.dash?'10 7':'none'},drawG)};
+        redraw(c); strokes.push(c); });
+    }
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
