@@ -118,6 +118,10 @@
     <ol id="dir2">
       <li><b>Check your data.</b> Your points and curve from Explore 3 load automatically. If they are missing, enter your journal data and click <b>Draw Curve</b>.</li>
       <li><b>Continue the pattern.</b> Click <b>Continue the Pattern</b>. The grapher follows the pattern in your data to extend the curve to 364 GPa.</li>
+      <li><b>Read the graph.</b> Move the cursor over the graph to read the pressure and temperature at any point.</li>
+    </ol>
+    <ol id="dir3">
+      <li><b>Check your curve.</b> Your data, curve, and continued pattern load automatically. If they are missing, enter your journal data, then click <b>Draw Curve</b> and <b>Continue the Pattern</b>.</li>
       <li><b>Add the core data.</b> Click <b>Add Core Conditions Data</b> to plot the pressure and estimated temperature inside Earth's core.</li>
       <li><b>Read the graph.</b> Move the cursor over the graph to read the pressure and temperature at any point.</li>
     </ol>
@@ -165,21 +169,23 @@
   const legBox=el('rect',{width:300,height:98,rx:6,fill:'#fff',stroke:NAVY,'stroke-width':1.4},leg);
   el('circle',{cx:18,cy:20,r:6,fill:TEAL},leg);
   let tx=el('text',{x:34,y:25,'font-size':14,'font-weight':700,fill:NAVY},leg);tx.textContent='Your melting temperatures';
-  const leg2=el('g',{},leg);
+  const leg2=el('g',{},leg), leg3=el('g',{},leg);
   el('line',{x1:8,y1:48,x2:28,y2:48,stroke:TEAL,'stroke-width':3,'stroke-dasharray':'6 4'},leg2);
   tx=el('text',{x:34,y:53,'font-size':14,'font-weight':700,fill:NAVY},leg2);tx.textContent='Continued pattern';
-  el('rect',{x:12,y:70,width:12,height:12,fill:CORE},leg2);
-  tx=el('text',{x:34,y:81,'font-size':14,'font-weight':700,fill:NAVY},leg2);tx.textContent='Core Conditions data';
+  el('rect',{x:12,y:70,width:12,height:12,fill:CORE},leg3);
+  tx=el('text',{x:34,y:81,'font-size':14,'font-weight':700,fill:NAVY},leg3);tx.textContent='Core Conditions data';
 
   // ---------- part (Explore 3 = part 1, Explore 4 = part 2) ----------
-  let PART=1; try{ if(new URLSearchParams(location.search).get('part')==='2') PART=2; }catch(e){}
+  let PART=1; try{ const q=new URLSearchParams(location.search).get('part'); if(q==='2') PART=2; if(q==='3') PART=3; }catch(e){}
+  ['dir1','dir2','dir3'].forEach((d,i)=>{ if(i+1!==PART) $(d).style.display='none'; });
   if(PART===1){
     $('bCont').style.display='none'; $('bCore').style.display='none';
-    leg2.style.display='none'; legBox.setAttribute('height',40); legBox.setAttribute('width',230);
-    $('dir2').style.display='none';
+    leg2.style.display='none'; leg3.style.display='none'; legBox.setAttribute('height',40); legBox.setAttribute('width',230);
+  } else if(PART===2){
+    $('bCore').style.display='none'; leg3.style.display='none'; legBox.setAttribute('height',68); legBox.setAttribute('width',230);
+    $('sub').textContent="Continue the pattern in your data past the pressures the experiments reached.";
   } else {
-    $('dir1').style.display='none';
-    $('sub').textContent="Continue the pattern in your data and compare it with conditions inside Earth's core.";
+    $('sub').textContent="Compare your continued melting curve with conditions inside Earth's core.";
   }
 
   // ---------- state ----------
@@ -274,7 +280,7 @@
     const saved=JSON.parse(localStorage.getItem(KEY)||'null');
     if(saved){
       (saved.data||[]).forEach((v,i)=>{ if(inputs[i]){ inputs[i][0].value=v[0]||''; inputs[i][1].value=v[1]||''; } });
-      curveOn=!!saved.curveOn; contOn=PART===2 && !!saved.contOn;
+      curveOn=!!saved.curveOn; contOn=PART>=2 && !!saved.contOn;
     }
   }catch(e){}
   setBtns(); render();

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melting Curve Grapher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1D253F; --gold:#D9AD5A; --cream:#F3EFE7; --ink:#1D253F;
+    --muted:#6B6F7E; --line:#E4DED2; --teal:#2E8B7A; --orange:#E2A24E; --gray:#6B6F7E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--cream);font-family:'Nunito',sans-serif;color:var(--ink)}
+  #wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  #stage{width:1280px;height:720px;position:relative;background:var(--cream);transform-origin:center center;flex:none}
+
+  header{height:84px;background:var(--navy);padding:16px 28px 0;position:relative}
+  header h1{color:#fff;font-size:26px;font-weight:800;letter-spacing:.2px}
+  header .rule{width:110px;height:4px;background:var(--gold);border-radius:2px;margin:6px 0 6px}
+  header p{color:#D8DCE8;font-size:14px}
+  #dirBtn{position:absolute;right:28px;top:24px;background:var(--gold);color:var(--navy);border:0;border-radius:8px;
+    font:800 17px 'Nunito',sans-serif;padding:8px 20px;cursor:pointer}
+
+  main{display:grid;grid-template-columns:330px 1fr;gap:18px;padding:16px 22px 0;height:620px}
+  .card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(29,37,63,.08);padding:14px 16px}
+  .ch{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .badge{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;background:#DDF0EC}
+  .badge svg{width:17px;height:17px}
+  .ch h2{font-size:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+
+  #left{display:flex;flex-direction:column;gap:14px}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:0 4px 6px;text-align:center}
+  td{padding:3px 4px;text-align:center;font-weight:800;font-size:15px}
+  td input{width:100%;font:700 16px 'Nunito',sans-serif;color:var(--ink);border:2px solid var(--line);border-radius:8px;padding:5px 8px;text-align:center;background:#fff}
+  td input:focus{outline:none;border-color:var(--teal)}
+  td input.bad{border-color:#B8322A;background:#FBEDEB}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.35}
+
+  .btns{display:flex;flex-direction:column;gap:9px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--orange);color:var(--navy);border:0;border-radius:10px;
+    font:800 17px 'Nunito',sans-serif;padding:10px 14px;cursor:pointer}
+  .btn svg{width:20px;height:20px;flex:none}
+  .btn.on{background:var(--navy);color:#fff}
+  .btn.on svg *{stroke:#fff}
+  #bCore.on svg{fill:#fff}
+  .btn.sec{background:#fff;border:2px solid var(--line);font-size:15px;padding:7px 12px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+
+  #graphCard{display:flex;flex-direction:column;position:relative}
+  #readout{position:absolute;right:18px;top:14px;background:var(--cream);border-radius:10px;padding:6px 14px;font-size:15px;font-weight:800;min-width:290px;text-align:center}
+  #readout span{color:var(--teal)}
+  #mode{position:absolute;left:18px;top:12px;max-width:520px;font-size:14px;font-weight:800;color:#fff;background:var(--teal);border-radius:10px;padding:6px 12px;line-height:1.3;display:none}
+  #g{width:100%;flex:1;touch-action:none;user-select:none}
+
+  #dirOverlay{position:absolute;inset:0;background:rgba(14,19,36,.6);display:none;align-items:center;justify-content:center;z-index:10}
+  #dirOverlay.show{display:flex}
+  .dirBox{background:#fff;border-radius:16px;width:760px;padding:0 0 22px;overflow:hidden;position:relative}
+  .dirBox h3{background:var(--gold);color:var(--navy);font-size:26px;font-weight:800;text-align:center;padding:12px}
+  .dirBox ol{padding:18px 40px 0 64px;font-size:17px;line-height:1.55}
+  .dirBox li{margin-bottom:6px}
+  #dirClose{position:absolute;right:12px;top:10px;width:34px;height:34px;border-radius:50%;border:0;background:var(--navy);color:#fff;font-size:18px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+
+<header>
+  <h1>Melting Curve Grapher</h1>
+  <div class="rule"></div>
+  <p id="sub">Graph your diamond anvil cell results and draw the melting curve of iron.</p>
+  <button id="dirBtn">Directions</button>
+</header>
+
+<main>
+  <div id="left">
+    <div class="card">
+      <div class="ch">
+        <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="#2E8B7A" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16"/></svg></div>
+        <h2>Your Data</h2>
+      </div>
+      <table>
+        <thead><tr><th>Trial</th><th>Pressure (GPa)</th><th>Melting Temp. (°C)</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="hint">Enter the values from your journal table. Each point appears on the graph. Your data is saved on this device.</div>
+    </div>
+
+    <div class="card btns">
+      <button class="btn" id="bDraw">Draw Curve
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1D253F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20c4-1 6-6 9-10s5-6 9-6"/></svg></button>
+      <button class="btn" id="bCont">Continue the Pattern
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1D253F" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="3 3"><path d="M3 20c4-1 6-6 9-10s5-6 9-6"/></svg></button>
+      <button class="btn" id="bCore">Add Core Conditions Data
+        <svg viewBox="0 0 24 24" fill="#1D253F"><rect x="3" y="14" width="5" height="5"/><rect x="10" y="9" width="5" height="5"/><rect x="17" y="5" width="5" height="5"/></svg></button>
+      <button class="btn sec" id="bReset">Reset All</button>
+    </div>
+  </div>
+
+  <div class="card" id="graphCard">
+    <div id="mode"></div>
+    <div id="readout">Pressure: <span id="rp">--</span> GPa &nbsp;·&nbsp; Temperature: <span id="rt">--</span> °C</div>
+    <svg id="g" viewBox="0 0 880 600"></svg>
+  </div>
+</main>
+
+<div id="dirOverlay">
+  <div class="dirBox">
+    <button id="dirClose" aria-label="Close">&times;</button>
+    <h3>Directions</h3>
+    <ol id="dir1">
+      <li><b>Enter your data.</b> Type each pressure and melting temperature from your journal table. Each point appears on the graph.</li>
+      <li><b>Draw the curve.</b> Click <b>Draw Curve</b>. The grapher draws the smooth curve that best fits your points.</li>
+      <li><b>Read the graph.</b> Move the cursor over the graph to read the pressure and temperature at any point.</li>
+    </ol>
+    <ol id="dir2">
+      <li><b>Check your data.</b> Your points and curve from Explore 3 load automatically. If they are missing, enter your journal data and click <b>Draw Curve</b>.</li>
+      <li><b>Continue the pattern.</b> Click <b>Continue the Pattern</b>. The grapher follows the pattern in your data to extend the curve to 364 GPa.</li>
+      <li><b>Read the graph.</b> Move the cursor over the graph to read the pressure and temperature at any point.</li>
+    </ol>
+    <ol id="dir3">
+      <li><b>Check your curve.</b> Your data, curve, and continued pattern load automatically. If they are missing, enter your journal data, then click <b>Draw Curve</b> and <b>Continue the Pattern</b>.</li>
+      <li><b>Add the core data.</b> Click <b>Add Core Conditions Data</b> to plot the pressure and estimated temperature inside Earth's core.</li>
+      <li><b>Read the graph.</b> Move the cursor over the graph to read the pressure and temperature at any point.</li>
+    </ol>
+  </div>
+</div>
+
+</div></div>
+
+<script>
+(function(){
+  const stage=document.getElementById('stage');
+  function fit(){ const s=Math.min(window.innerWidth/1280, window.innerHeight/720); stage.style.transform='scale('+s+')'; }
+  window.addEventListener('resize',fit); fit();
+  const $=id=>document.getElementById(id);
+  $('dirBtn').onclick=()=>$('dirOverlay').classList.add('show');
+  $('dirClose').onclick=()=>$('dirOverlay').classList.remove('show');
+  $('dirOverlay').onclick=e=>{ if(e.target.id==='dirOverlay') $('dirOverlay').classList.remove('show'); };
+
+  const TEAL='#2E8B7A', CORE='#C2502E', NAVY='#1D253F';
+  const NS='http://www.w3.org/2000/svg', svg=$('g');
+  const L=92,R=860,T=58,B=530, PMAX=400, TMIN=2500, TMAX=6000, PEND=364;
+  const X=p=>L+(R-L)*p/PMAX, Y=t=>B-(B-T)*(t-TMIN)/(TMAX-TMIN);
+  const P=x=>(x-L)/(R-L)*PMAX, Tm=y=>TMIN+(B-y)/(B-T)*(TMAX-TMIN);
+  const el=(n,a,parent)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);(parent||svg).appendChild(e);return e;};
+
+  // ---------- grid ----------
+  const grid=el('g',{});
+  for(let p=0;p<=PMAX;p+=10){const maj=p%50===0;
+    el('line',{x1:X(p),y1:T,x2:X(p),y2:B,stroke:maj?'#9AA2AE':'#E3E6EA','stroke-width':maj?1.6:1},grid);
+    if(maj){const t=el('text',{x:X(p),y:B+24,'text-anchor':'middle','font-size':15,'font-weight':700,fill:NAVY},grid);t.textContent=p;}}
+  for(let t=TMIN;t<=TMAX;t+=100){const maj=t%500===0;
+    el('line',{x1:L,y1:Y(t),x2:R,y2:Y(t),stroke:maj?'#9AA2AE':'#E3E6EA','stroke-width':maj?1.6:1},grid);
+    if(maj){const s=el('text',{x:L-10,y:Y(t)+5,'text-anchor':'end','font-size':15,'font-weight':700,fill:NAVY},grid);s.textContent=t.toLocaleString('en-US');}}
+  el('line',{x1:L,y1:T,x2:L,y2:B,stroke:NAVY,'stroke-width':2.5},grid);
+  el('line',{x1:L,y1:B,x2:R,y2:B,stroke:NAVY,'stroke-width':2.5},grid);
+  let a=el('text',{x:(L+R)/2,y:B+56,'text-anchor':'middle','font-size':18,'font-weight':800,fill:NAVY},grid);a.textContent='Pressure (GPa)';
+  a=el('text',{transform:`translate(26,${(T+B)/2}) rotate(-90)`,'text-anchor':'middle','font-size':18,'font-weight':800,fill:NAVY},grid);a.textContent='Temperature (°C)';
+
+  const coreG=el('g',{}), curveG=el('g',{}), ptG=el('g',{}), cross=el('g',{opacity:0,'pointer-events':'none'});
+  const ch1=el('line',{stroke:NAVY,'stroke-width':1,'stroke-dasharray':'4 4'},cross);
+  const ch2=el('line',{stroke:NAVY,'stroke-width':1,'stroke-dasharray':'4 4'},cross);
+
+  // ---------- legend ----------
+  const leg=el('g',{transform:`translate(${L+14},${T+10})`});
+  const legBox=el('rect',{width:300,height:98,rx:6,fill:'#fff',stroke:NAVY,'stroke-width':1.4},leg);
+  el('circle',{cx:18,cy:20,r:6,fill:TEAL},leg);
+  let tx=el('text',{x:34,y:25,'font-size':14,'font-weight':700,fill:NAVY},leg);tx.textContent='Your melting temperatures';
+  const leg2=el('g',{},leg), leg3=el('g',{},leg);
+  el('line',{x1:8,y1:48,x2:28,y2:48,stroke:TEAL,'stroke-width':3,'stroke-dasharray':'6 4'},leg2);
+  tx=el('text',{x:34,y:53,'font-size':14,'font-weight':700,fill:NAVY},leg2);tx.textContent='Continued pattern';
+  el('rect',{x:12,y:70,width:12,height:12,fill:CORE},leg3);
+  tx=el('text',{x:34,y:81,'font-size':14,'font-weight':700,fill:NAVY},leg3);tx.textContent='Core Conditions data';
+
+  // ---------- part (Explore 3 = part 1, Explore 4 = part 2) ----------
+  let PART=3;
+  ['dir1','dir2','dir3'].forEach((d,i)=>{ if(i+1!==PART) $(d).style.display='none'; });
+  if(PART===1){
+    $('bCont').style.display='none'; $('bCore').style.display='none';
+    leg2.style.display='none'; leg3.style.display='none'; legBox.setAttribute('height',40); legBox.setAttribute('width',230);
+  } else if(PART===2){
+    $('bCore').style.display='none'; leg3.style.display='none'; legBox.setAttribute('height',68); legBox.setAttribute('width',230);
+    $('sub').textContent="Continue the pattern in your data past the pressures the experiments reached.";
+  } else {
+    $('sub').textContent="Compare your continued melting curve with conditions inside Earth's core.";
+  }
+
+  // ---------- state ----------
+  const KEY='melting-curve-grapher-v2';
+  let curveOn=false, contOn=false, coreOn=false;
+  const inputs=[];
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify({data:inputs.map(([a,b])=>[a.value,b.value]), curveOn, contOn})); }catch(e){} }
+  function msg(t){ const m=$('mode'); m.textContent=t||''; m.style.display=t?'block':'none'; }
+
+  // ---------- data entry ----------
+  const rows=$('rows');
+  for(let i=0;i<6;i++){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${i+1}</td><td><input inputmode="decimal"></td><td><input inputmode="decimal"></td>`;
+    rows.appendChild(tr);
+    const [ip,it]=tr.querySelectorAll('input'); inputs.push([ip,it]);
+    [ip,it].forEach(inp=>inp.addEventListener('input',()=>{render();save();}));
+  }
+  function num(v){v=String(v).replace(/,/g,'').trim(); if(v==='')return null; const n=Number(v); return isFinite(n)?n:NaN;}
+  function points(){
+    const out=[];
+    inputs.forEach(([ip,it])=>{
+      const p=num(ip.value), t=num(it.value);
+      ip.classList.toggle('bad', p!==null && (isNaN(p)||p<=0||p>PMAX));
+      it.classList.toggle('bad', t!==null && (isNaN(t)||t<TMIN||t>TMAX));
+      if(p===null||t===null||isNaN(p)||isNaN(t)||p<=0||p>PMAX||t<TMIN||t>TMAX) return;
+      out.push([p,t]);
+    });
+    return out.sort((a,b)=>a[0]-b[0]);
+  }
+
+  // ---------- best-fit melting curve: T(K) = a(1 + P/b)^c ----------
+  function fitCurve(pts){
+    let best=null;
+    for(let b=2;b<=300;b+=0.5){
+      const xs=pts.map(([p])=>Math.log(1+p/b)), ys=pts.map(([,t])=>Math.log(t+273.15));
+      const n=xs.length, mx=xs.reduce((s,v)=>s+v,0)/n, my=ys.reduce((s,v)=>s+v,0)/n;
+      let sxx=0,sxy=0; for(let i=0;i<n;i++){sxx+=(xs[i]-mx)**2; sxy+=(xs[i]-mx)*(ys[i]-my);}
+      if(sxx===0) continue;
+      const c=sxy/sxx, la=my-c*mx; if(c<=0) continue;
+      let sse=0; for(let i=0;i<n;i++){ const e=Math.exp(la+c*xs[i])-273.15-pts[i][1]; sse+=e*e; }
+      if(!best||sse<best.sse) best={a:Math.exp(la),b,c,sse};
+    }
+    return best && (p=>best.a*Math.pow(1+p/best.b,best.c)-273.15);
+  }
+  function pathFor(f,p0,p1){
+    let d=''; const n=80;
+    for(let i=0;i<=n;i++){ const p=p0+(p1-p0)*i/n, t=Math.min(TMAX,Math.max(TMIN,f(p))); d+=(i?' L':'M')+X(p).toFixed(1)+','+Y(t).toFixed(1); }
+    return d;
+  }
+
+  // ---------- render ----------
+  const CORED=[[147,4260],[199,4600],[246,4880],[287,5100],[321,5270],[346,5340],[361,5380],[364,5400]];
+  function render(){
+    const pts=points();
+    ptG.innerHTML=''; curveG.innerHTML=''; coreG.innerHTML='';
+    pts.forEach(([p,t])=>el('circle',{cx:X(p),cy:Y(t),r:6.5,fill:TEAL},ptG));
+    if(coreOn){
+      el('polyline',{points:CORED.map(([p,t])=>X(p)+','+Y(t)).join(' '),fill:'none',stroke:CORE,'stroke-width':3},coreG);
+      CORED.forEach(([p,t])=>el('rect',{x:X(p)-6,y:Y(t)-6,width:12,height:12,fill:CORE},coreG));
+    }
+    if(!(curveOn||contOn)) return;
+    if(pts.length<3){ msg('Enter at least three data points to draw a curve.'); return; }
+    msg('');
+    const f=fitCurve(pts); if(!f) return;
+    const pLo=pts[0][0], pHi=pts[pts.length-1][0];
+    if(curveOn) el('path',{d:pathFor(f,pLo,pHi),fill:'none',stroke:TEAL,'stroke-width':3.5,'stroke-linecap':'round'},curveG);
+    if(contOn && pHi<PEND) el('path',{d:pathFor(f,pHi,PEND),fill:'none',stroke:TEAL,'stroke-width':3.5,'stroke-dasharray':'10 7'},curveG);
+  }
+  function setBtns(){ $('bDraw').classList.toggle('on',curveOn); $('bCont').classList.toggle('on',contOn); $('bCore').classList.toggle('on',coreOn); }
+  $('bDraw').onclick=()=>{ curveOn=!curveOn; if(!curveOn) contOn=false; setBtns(); render(); save(); };
+  $('bCont').onclick=()=>{ contOn=!contOn; if(contOn) curveOn=true; setBtns(); render(); save(); };
+  $('bCore').onclick=()=>{ coreOn=!coreOn; setBtns(); render(); };
+  $('bReset').onclick=()=>{ inputs.forEach(r=>r.forEach(i=>{i.value='';i.classList.remove('bad');})); curveOn=contOn=coreOn=false; msg(''); setBtns(); render(); save(); };
+
+  // ---------- readout ----------
+  function pt(e){const r=svg.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*880,(e.clientY-r.top)/r.height*600];}
+  svg.addEventListener('pointermove',e=>{
+    const [x,y]=pt(e);
+    if(x>=L&&x<=R&&y>=T&&y<=B){
+      cross.setAttribute('opacity',1);
+      ch1.setAttribute('x1',x);ch1.setAttribute('x2',x);ch1.setAttribute('y1',T);ch1.setAttribute('y2',B);
+      ch2.setAttribute('y1',y);ch2.setAttribute('y2',y);ch2.setAttribute('x1',L);ch2.setAttribute('x2',R);
+      $('rp').textContent=Math.round(P(x));
+      $('rt').textContent=(Math.round(Tm(y)/10)*10).toLocaleString('en-US');
+    } else { cross.setAttribute('opacity',0); $('rp').textContent='--'; $('rt').textContent='--'; }
+  });
+  svg.addEventListener('pointerleave',()=>{cross.setAttribute('opacity',0);$('rp').textContent='--';$('rt').textContent='--';});
+
+  // ---------- restore ----------
+  try{
+    const saved=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(saved){
+      (saved.data||[]).forEach((v,i)=>{ if(inputs[i]){ inputs[i][0].value=v[0]||''; inputs[i][1].value=v[1]||''; } });
+      curveOn=!!saved.curveOn; contOn=PART>=2 && !!saved.contOn;
+    }
+  }catch(e){}
+  setBtns(); render();
+})();
+</script>
+</body>
+</html>
